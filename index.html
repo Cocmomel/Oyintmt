@@ -1,139 +1,156 @@
 <!DOCTYPE html>
-<html>
+<html lang="uz">
 <head>
-  <meta charset="UTF-8">
-  <title>🧮 Matematika O'yini</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    :root { --bg:#f5f7fb; --card:#ffffff; --accent:#0088cc; --text:#111827; }
-    body { margin:0; font-family: Inter, Arial, sans-serif; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; }
-    .wrap { max-width:420px; margin:30px auto; padding:18px; }
-    .card { background:var(--card); border-radius:12px; padding:18px; box-shadow:0 6px 18px rgba(15,23,42,0.06); text-align:center; }
-    h1 { margin:6px 0 12px; font-size:20px; }
-    .meta { font-size:13px; color:#6b7280; margin-bottom:12px; }
-    .question { font-size:28px; margin:18px 0; font-weight:600; }
-    .answers { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; }
-    .ansbtn { flex:1 1 45%; min-width:120px; padding:10px 12px; border-radius:10px; border:none; font-size:18px; cursor:pointer; background:var(--accent); color:white; }
-    .ansbtn.small { font-size:16px; padding:8px; }
-    .score { margin-top:12px; font-weight:600; }
-    footer { margin-top:14px; display:flex; gap:8px; justify-content:center; }
-    .ghost { background:transparent; border:1px solid #d1d5db; color:#111827; padding:8px 12px; border-radius:10px; cursor:pointer; }
-    .finish { background:#10b981; color:white; border:none; padding:8px 12px; border-radius:10px; cursor:pointer; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>21 Ochko (Blackjack)</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #2e7d32; color: white; text-align: center; }
+  #game { margin: 20px auto; max-width: 600px; }
+  .cards { margin: 10px; }
+  .card { display: inline-block; width: 60px; height: 90px; border-radius: 8px; background: white; color: black; font-size: 24px; line-height: 90px; margin: 5px; }
+  button { font-size: 18px; margin: 10px; padding: 10px 20px; }
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <h1>🧠 Matematika O'yini</h1>
-      <div id="userinfo" class="meta">Yuklanmoqda...</div>
+<h1>21 Ochko</h1>
+<div id="betInfo"></div>
+<div id="dealer" class="cards"></div>
+<div id="player" class="cards"></div>
+<div>
+  <button id="hitBtn">Yana karta</button>
+  <button id="standBtn">To'xtash</button>
+</div>
+<div id="result"></div>
 
-      <div id="gameArea">
-        <div class="question" id="question">—</div>
-        <div class="answers" id="answers"></div>
-        <div class="score" id="score">To'g'ri javoblar: 0</div>
-      </div>
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+const bet = parseInt(urlParams.get('bet')) || 0;
+const userId = urlParams.get('user_id');
 
-      <footer>
-        <button class="ghost" id="skipBtn">Keyingisi</button>
-        <button class="finish" id="finishBtn">📤 Yakunlash</button>
-      </footer>
-    </div>
-  </div>
+document.getElementById('betInfo').innerText = `Tikilgan pul: ${bet} virtual pul`;
 
-  <script>
-    // Telegram WebApp init
-    const tg = window.Telegram?.WebApp;
-    if (tg) {
-      tg.expand();
-      const user = tg.initDataUnsafe?.user || {};
-      const name = (user.first_name||'') + (user.last_name?(' '+user.last_name):'');
-      document.getElementById('userinfo').innerText = `👤 ${name} ${user.username?('(@'+user.username+')'):''}`;
-    } else {
-      document.getElementById('userinfo').innerText = '❗ Telegram WebApp muhitida oching';
+const deck = [];
+const suits = ['♠','♥','♦','♣'];
+const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+
+// Deck yaratish
+function createDeck() {
+  deck.length = 0;
+  for(let s of suits){
+    for(let r of ranks){
+      deck.push({suit:s, rank:r});
     }
+  }
+}
 
-    // Game logic
-    let score = 0;
-    let currentAnswer = null;
-    let totalAsked = 0;
+// Kartani random olish
+function drawCard(){
+  return deck.splice(Math.floor(Math.random()*deck.length),1)[0];
+}
 
-    function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+// Kartalar qiymati
+function cardValue(card, currentSum){
+  if(card.rank === 'A'){
+    return (currentSum + 11) <= 21 ? 11 : 1;
+  }
+  if(['J','Q','K'].includes(card.rank)) return 10;
+  return parseInt(card.rank);
+}
 
-    function generateQuestion() {
-      // choose difficulty scaling by totalAsked
-      const maxN = 10 + Math.min(30, Math.floor(totalAsked/3)*2); // gradually increases
-      const a = randInt(1, maxN);
-      const b = randInt(1, Math.max(2, Math.min(maxN, Math.round(maxN/2))));
-      const ops = ['+', '-', '×'];
-      const op = ops[randInt(0, ops.length-1)];
+// O'yin holati
+let playerCards = [];
+let dealerCards = [];
+let playerSum = 0;
+let dealerSum = 0;
+let gameOver = false;
 
-      let correct;
-      if (op === '+') correct = a + b;
-      else if (op === '-') correct = a - b;
-      else correct = a * b;
+function updateDisplay(){
+  const playerDiv = document.getElementById('player');
+  const dealerDiv = document.getElementById('dealer');
+  playerDiv.innerHTML = '';
+  dealerDiv.innerHTML = '';
+  for(let c of playerCards){
+    let cardDiv = document.createElement('div');
+    cardDiv.className = 'card';
+    cardDiv.innerText = c.rank + c.suit;
+    playerDiv.appendChild(cardDiv);
+  }
+  for(let c of dealerCards){
+    let cardDiv = document.createElement('div');
+    cardDiv.className = 'card';
+    cardDiv.innerText = c.rank + c.suit;
+    dealerDiv.appendChild(cardDiv);
+  }
+  document.getElementById('result').innerText = `Siz: ${playerSum} | Diler: ${dealerSum}`;
+}
 
-      currentAnswer = correct;
-      totalAsked += 1;
-      document.getElementById('question').innerText = `${a} ${op} ${b} = ?`;
+// Diler o‘yin qoidasi
+function dealerTurn(){
+  while(dealerSum < 17){
+    let card = drawCard();
+    dealerCards.push(card);
+    dealerSum += cardValue(card,dealerSum);
+  }
+}
 
-      // create 3 distractors
-      const answers = new Set([correct]);
-      while (answers.size < 4) {
-        // produce plausible distractors
-        const delta = Math.max(1, Math.floor(Math.abs(correct)*0.2)) + randInt(-3,3);
-        const candidate = correct + (Math.random()<0.5 ? delta : -delta);
-        answers.add(candidate);
-      }
+// O'yin boshlanishi
+function startGame(){
+  createDeck();
+  playerCards = [drawCard(), drawCard()];
+  dealerCards = [drawCard(), drawCard()];
+  playerSum = playerCards.reduce((sum,c) => sum + cardValue(c,sum), 0);
+  dealerSum = dealerCards.reduce((sum,c) => sum + cardValue(c,sum), 0);
+  updateDisplay();
+  document.getElementById('result').innerText = 'Oʻyin boshlandi!';
+  gameOver = false;
+}
 
-      // shuffle and render
-      const arr = Array.from(answers).sort(()=>Math.random()-0.5);
-      const container = document.getElementById('answers');
-      container.innerHTML = '';
-      arr.forEach(v=>{
-        const btn = document.createElement('button');
-        btn.className = 'ansbtn';
-        btn.innerText = v;
-        btn.onclick = ()=>checkAnswer(v);
-        container.appendChild(btn);
-      });
+document.getElementById('hitBtn').onclick = function(){
+  if(gameOver) return;
+  let card = drawCard();
+  playerCards.push(card);
+  playerSum += cardValue(card,playerSum);
+  updateDisplay();
+  if(playerSum > 21){
+    document.getElementById('result').innerText = 'Siz magʻlub boʻldingiz!';
+    gameOver = true;
+    sendResult('lose');
+  }
+}
 
-      document.getElementById('score').innerText = `To'g'ri javoblar: ${score}`;
-    }
+document.getElementById('standBtn').onclick = function(){
+  if(gameOver) return;
+  dealerTurn();
+  updateDisplay();
+  if(dealerSum > 21 || playerSum > dealerSum){
+    document.getElementById('result').innerText = 'Siz yutdingiz!';
+    sendResult('win');
+  } else if(playerSum === dealerSum){
+    document.getElementById('result').innerText = 'Durang!';
+    sendResult('draw');
+  } else {
+    document.getElementById('result').innerText = 'Siz magʻlub boʻldingiz!';
+    sendResult('lose');
+  }
+  gameOver = true;
+}
 
-    function checkAnswer(selected) {
-      if (selected === currentAnswer) {
-        score++;
-        flash(true);
-      } else {
-        flash(false);
-      }
-      generateQuestion();
-    }
+// Natijani botga yuborish funksiyasi (server API bilan bog‘lanadi)
+function sendResult(result){
+  // Mana bu yerga Telegram bot API yoki sizning server APIingizni qo‘shishingiz mumkin
+  // Misol uchun fetch orqali natijani yuborish
+  /*
+  fetch('https://sizning-serveringiz/api/game-result', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({user_id: userId, bet: bet, result: result})
+  });
+  */
+  alert('O\'yin natijasi: ' + result + '\n(Backend bilan bog\'lanish kerak)');
+}
 
-    function flash(ok){
-      const q = document.getElementById('question');
-      q.style.transition = 'background 0.18s';
-      q.style.background = ok ? '#ecfdf5' : '#fff7ed';
-      setTimeout(()=> q.style.background = 'transparent', 180);
-    }
-
-    document.getElementById('skipBtn').addEventListener('click', ()=>{
-      generateQuestion();
-    });
-
-    document.getElementById('finishBtn').addEventListener('click', ()=>{
-      // send data back to bot
-      const payload = { status: 'game_over', score: score, total: totalAsked };
-      if (tg) {
-        tg.sendData(JSON.stringify(payload));
-      } else {
-        alert('Local preview: ' + JSON.stringify(payload));
-      }
-    });
-
-    // start
-    generateQuestion();
-  </script>
+startGame();
+</script>
 </body>
 </html>
