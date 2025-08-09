@@ -3,154 +3,250 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>21 Ochko (Blackjack)</title>
+<title>21 Ochko Mini Ilova</title>
 <style>
-  body { font-family: Arial, sans-serif; background: #2e7d32; color: white; text-align: center; }
-  #game { margin: 20px auto; max-width: 600px; }
-  .cards { margin: 10px; }
-  .card { display: inline-block; width: 60px; height: 90px; border-radius: 8px; background: white; color: black; font-size: 24px; line-height: 90px; margin: 5px; }
-  button { font-size: 18px; margin: 10px; padding: 10px 20px; }
+  body, html {
+    margin: 0; padding: 0; height: 100%; font-family: Arial, sans-serif; background: #f9f9f9;
+    display: flex; flex-direction: column;
+  }
+  /* Loading sahifa */
+  #loading {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: white; display: flex; justify-content: center; align-items: center;
+    flex-direction: column; z-index: 10;
+  }
+  #loading img {
+    width: 150px; margin-bottom: 20px;
+  }
+  #loading p {
+    font-size: 18px; color: #555;
+  }
+
+  /* Asosiy kontent */
+  #app {
+    flex: 1; display: none; flex-direction: column;
+  }
+  /* Pastki menyu */
+  #menu {
+    height: 60px; background: #007bff; display: flex; justify-content: space-around; align-items: center;
+    color: white; font-weight: bold; position: fixed; bottom: 0; width: 100%; box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
+  }
+  #menu button {
+    background: none; border: none; color: white; font-size: 14px; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  #menu button:hover {
+    color: #ffd700;
+  }
+  #menu button.active {
+    color: #ffd700;
+  }
+
+  /* Sahifa sarlavhalari */
+  #content {
+    padding: 20px; margin-bottom: 70px; /* pastki menyuga joy qoldirish uchun */
+    overflow-y: auto; flex: 1;
+  }
+  h2 {
+    margin-top: 0;
+  }
+
+  /* Hisobim bo‘limi */
+  #balance {
+    font-size: 24px; font-weight: bold; margin-bottom: 15px;
+  }
+  #history {
+    max-height: 200px; overflow-y: auto; background: #fff; padding: 10px; border-radius: 5px; box-shadow: 0 0 5px #ccc;
+  }
+  #history table {
+    width: 100%; border-collapse: collapse;
+  }
+  #history th, #history td {
+    padding: 8px; border-bottom: 1px solid #ddd; text-align: left;
+  }
+  #withdraw-btn {
+    margin-top: 15px; padding: 10px 20px; background: #28a745; border: none; color: white; border-radius: 5px;
+    cursor: pointer; font-weight: bold;
+  }
+  #withdraw-btn:hover {
+    background: #218838;
+  }
+
+  /* Referal ssilka */
+  #ref-link {
+    background: #e9ecef; padding: 10px; border-radius: 5px; user-select: all;
+    margin-bottom: 10px; font-size: 14px; word-break: break-all;
+  }
+  #ref-count {
+    font-weight: bold; margin-bottom: 15px;
+  }
+
+  /* Biz haqimizda */
+  #about {
+    font-size: 16px; line-height: 1.5;
+  }
+  #about a {
+    color: #007bff; text-decoration: none;
+  }
+  #about a:hover {
+    text-decoration: underline;
+  }
+  #contact-btn {
+    margin-top: 15px; padding: 10px 20px; background: #007bff; border: none; color: white; border-radius: 5px;
+    cursor: pointer; font-weight: bold;
+  }
+  #contact-btn:hover {
+    background: #0056b3;
+  }
 </style>
 </head>
 <body>
-<h1>21 Ochko</h1>
-<div id="betInfo"></div>
-<div id="dealer" class="cards"></div>
-<div id="player" class="cards"></div>
-<div>
-  <button id="hitBtn">Yana karta</button>
-  <button id="standBtn">To'xtash</button>
+
+<!-- Loading ekrani -->
+<div id="loading">
+  <img src="https://cdn-icons-png.flaticon.com/512/1828/1828665.png" alt="Loading" />
+  <p>Yuklanmoqda...</p>
 </div>
-<div id="result"></div>
+
+<!-- Asosiy ilova -->
+<div id="app">
+
+  <div id="content">
+    <!-- Sahifa kontenti shu yerga chiqadi -->
+  </div>
+
+  <nav id="menu">
+    <button id="btn-games" class="active">O'yinlar</button>
+    <button id="btn-balance">Hisobim</button>
+    <button id="btn-friends">Dostlarim</button>
+    <button id="btn-about">Biz haqimizda</button>
+  </nav>
+
+</div>
 
 <script>
-const urlParams = new URLSearchParams(window.location.search);
-const bet = parseInt(urlParams.get('bet')) || 0;
-const userId = urlParams.get('user_id');
+  // Foydalanuvchi ma'lumotlari va balans uchun joy
+  let userId = null;
+  let balance = 0;
+  let history = [];
+  let refLink = "";
+  let refCount = 0;
 
-document.getElementById('betInfo').innerText = `Tikilgan pul: ${bet} virtual pul`;
+  // Sahifalarni yaratish funksiyalari
 
-const deck = [];
-const suits = ['♠','♥','♦','♣'];
-const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+  function renderGames() {
+    return `<h2>O'yinlar</h2>
+            <p>Hali o'yinlar qo'shilmagan.</p>`;
+  }
 
-// Deck yaratish
-function createDeck() {
-  deck.length = 0;
-  for(let s of suits){
-    for(let r of ranks){
-      deck.push({suit:s, rank:r});
+  function renderBalance() {
+    let histHtml = `<table>
+      <tr><th>Sana</th><th>Harakat</th><th>Summa</th></tr>`;
+    history.forEach(item => {
+      histHtml += `<tr>
+        <td>${item.date}</td>
+        <td>${item.action}</td>
+        <td>${item.amount} so'm</td>
+      </tr>`;
+    });
+    histHtml += `</table>`;
+
+    return `<h2>Hisobim</h2>
+            <div id="balance">Balans: ${balance} so'm</div>
+            <div id="history">${histHtml}</div>
+            <button id="withdraw-btn">Pul yechish</button>`;
+  }
+
+  function renderFriends() {
+    return `<h2>Dostlarim</h2>
+            <div>Referal ssilka:</div>
+            <div id="ref-link">${refLink}</div>
+            <div id="ref-count">Qo‘shilganlar soni: ${refCount}</div>`;
+  }
+
+  function renderAbout() {
+    return `<h2>Biz haqimizda</h2>
+            <p id="about">
+              Telegram kanal va guruhimiz: <br/>
+              <a href="https://t.me/TarjimakinolarTMT" target="_blank">TarjimakinolarTMT kanal</a><br/>
+              <a href="https://t.me/YourGroupLink" target="_blank">Bizning guruh</a><br/><br/>
+              Yordam kerak bo‘lsa, <button id="contact-btn">Adminga yozish</button>
+            </p>`;
+  }
+
+  // Asosiy kontentni yangilash
+  function updateContent(html) {
+    document.getElementById('content').innerHTML = html;
+    attachEventListeners();
+  }
+
+  // Buttonlarni boshqarish va faol buttonni belgilash
+  function setActiveButton(buttonId) {
+    document.querySelectorAll('#menu button').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(buttonId).classList.add('active');
+  }
+
+  // Event listenerlarni qo‘shish
+  function attachEventListeners() {
+    // Pul yechish tugmasi
+    const withdrawBtn = document.getElementById('withdraw-btn');
+    if (withdrawBtn) {
+      withdrawBtn.addEventListener('click', () => {
+        alert('Pul yechish funksiyasi hali ishlab chiqilmoqda.');
+      });
+    }
+    // Adminga yozish tugmasi
+    const contactBtn = document.getElementById('contact-btn');
+    if (contactBtn) {
+      contactBtn.addEventListener('click', () => {
+        // Adminga Telegramda yozish uchun link
+        window.open('https://t.me/Cocmomel', '_blank');
+      });
     }
   }
-}
 
-// Kartani random olish
-function drawCard(){
-  return deck.splice(Math.floor(Math.random()*deck.length),1)[0];
-}
+  // Menu buttonlariga event qo‘yish
+  document.getElementById('btn-games').onclick = () => {
+    setActiveButton('btn-games');
+    updateContent(renderGames());
+  };
+  document.getElementById('btn-balance').onclick = () => {
+    setActiveButton('btn-balance');
+    updateContent(renderBalance());
+  };
+  document.getElementById('btn-friends').onclick = () => {
+    setActiveButton('btn-friends');
+    updateContent(renderFriends());
+  };
+  document.getElementById('btn-about').onclick = () => {
+    setActiveButton('btn-about');
+    updateContent(renderAbout());
+  };
 
-// Kartalar qiymati
-function cardValue(card, currentSum){
-  if(card.rank === 'A'){
-    return (currentSum + 11) <= 21 ? 11 : 1;
-  }
-  if(['J','Q','K'].includes(card.rank)) return 10;
-  return parseInt(card.rank);
-}
+  // Loading ekrani 2 soniyadan so‘ng o‘chadi va app ko‘rinadi
+  window.onload = () => {
+    setTimeout(() => {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('app').style.display = 'flex';
+      updateContent(renderGames());
 
-// O'yin holati
-let playerCards = [];
-let dealerCards = [];
-let playerSum = 0;
-let dealerSum = 0;
-let gameOver = false;
-
-function updateDisplay(){
-  const playerDiv = document.getElementById('player');
-  const dealerDiv = document.getElementById('dealer');
-  playerDiv.innerHTML = '';
-  dealerDiv.innerHTML = '';
-  for(let c of playerCards){
-    let cardDiv = document.createElement('div');
-    cardDiv.className = 'card';
-    cardDiv.innerText = c.rank + c.suit;
-    playerDiv.appendChild(cardDiv);
-  }
-  for(let c of dealerCards){
-    let cardDiv = document.createElement('div');
-    cardDiv.className = 'card';
-    cardDiv.innerText = c.rank + c.suit;
-    dealerDiv.appendChild(cardDiv);
-  }
-  document.getElementById('result').innerText = `Siz: ${playerSum} | Diler: ${dealerSum}`;
-}
-
-// Diler o‘yin qoidasi
-function dealerTurn(){
-  while(dealerSum < 17){
-    let card = drawCard();
-    dealerCards.push(card);
-    dealerSum += cardValue(card,dealerSum);
-  }
-}
-
-// O'yin boshlanishi
-function startGame(){
-  createDeck();
-  playerCards = [drawCard(), drawCard()];
-  dealerCards = [drawCard(), drawCard()];
-  playerSum = playerCards.reduce((sum,c) => sum + cardValue(c,sum), 0);
-  dealerSum = dealerCards.reduce((sum,c) => sum + cardValue(c,sum), 0);
-  updateDisplay();
-  document.getElementById('result').innerText = 'Oʻyin boshlandi!';
-  gameOver = false;
-}
-
-document.getElementById('hitBtn').onclick = function(){
-  if(gameOver) return;
-  let card = drawCard();
-  playerCards.push(card);
-  playerSum += cardValue(card,playerSum);
-  updateDisplay();
-  if(playerSum > 21){
-    document.getElementById('result').innerText = 'Siz magʻlub boʻldingiz!';
-    gameOver = true;
-    sendResult('lose');
-  }
-}
-
-document.getElementById('standBtn').onclick = function(){
-  if(gameOver) return;
-  dealerTurn();
-  updateDisplay();
-  if(dealerSum > 21 || playerSum > dealerSum){
-    document.getElementById('result').innerText = 'Siz yutdingiz!';
-    sendResult('win');
-  } else if(playerSum === dealerSum){
-    document.getElementById('result').innerText = 'Durang!';
-    sendResult('draw');
-  } else {
-    document.getElementById('result').innerText = 'Siz magʻlub boʻldingiz!';
-    sendResult('lose');
-  }
-  gameOver = true;
-}
-
-// Natijani botga yuborish funksiyasi (server API bilan bog‘lanadi)
-function sendResult(result){
-  // Mana bu yerga Telegram bot API yoki sizning server APIingizni qo‘shishingiz mumkin
-  // Misol uchun fetch orqali natijani yuborish
-  /*
-  fetch('https://sizning-serveringiz/api/game-result', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({user_id: userId, bet: bet, result: result})
-  });
-  */
-  alert('O\'yin natijasi: ' + result + '\n(Backend bilan bog\'lanish kerak)');
-}
-
-startGame();
+      // Foydalanuvchi ID sini URL dan olamiz (agar bor bo‘lsa)
+      const params = new URLSearchParams(window.location.search);
+      userId = params.get('user_id') || 'guest';
+      
+      // Balans, tarix va referal ma'lumotlarini olish uchun
+      // Bu yerda API dan fetch qilish yoki test uchun statik qiymat
+      balance = 50000; // misol uchun 50,000 so‘m
+      history = [
+        {date: '2025-08-09', action: 'Yutuq', amount: 2500},
+        {date: '2025-08-08', action: 'Tikish', amount: -1000},
+        {date: '2025-08-07', action: 'Yutuq', amount: 3500}
+      ];
+      refLink = `https://t.me/YourBot?start=${userId}`;
+      refCount = 3; // misol uchun
+    }, 2000);
+  };
 </script>
+
 </body>
 </html>
