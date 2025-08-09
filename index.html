@@ -41,7 +41,7 @@
   }
   #balance-section img.bg-img {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    object-fit: cover; opacity: 0.1; pointer-events: none; border-radius: 12px; z-index: 0;
+    object-fit: cover; opacity: 0.3; pointer-events: none; border-radius: 12px; z-index: 0;
   }
   #balance-section .content {
     position: relative; z-index: 1; color: #333;
@@ -85,7 +85,7 @@
   }
   #friends-section img.bg-img {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    object-fit: cover; opacity: 0.1; pointer-events: none; border-radius: 12px; z-index: 0;
+    object-fit: cover; opacity: 0.3; pointer-events: none; border-radius: 12px; z-index: 0;
   }
   #friends-section .content {
     position: relative; z-index: 1; color: #333;
@@ -116,7 +116,7 @@
   }
   #about-section img.bg-img {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    object-fit: cover; opacity: 0.1; pointer-events: none; border-radius: 12px; z-index: 0;
+    object-fit: cover; opacity: 0.3; pointer-events: none; border-radius: 12px; z-index: 0;
   }
   #about-section .content {
     position: relative; z-index: 1; color: #333; font-size: 16px; line-height: 1.5;
@@ -246,4 +246,21 @@
   function renderAbout() {
     return `
       <div id="about-section">
-        <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d
+        <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=60" alt="About Background" class="bg-img" />
+        <div class="content">
+          <p>Bizning Telegram kanal va guruhimizga qo'shiling va yordam uchun admin bilan bog'laning.</p>
+          <p><a href="https://t.me/YourChannel" target="_blank">📢 Kanalimiz</a></p>
+          <p><a href="https://t.me/YourGroup" target="_blank">👥 Guruhimiz</a></p>
+        </div>
+      </div>
+    `;
+  }
+
+  // Sahifalar orasida almashish
+  const contentDiv = document.getElementById('content');
+  const btnGames = document.getElementById('btn-games');
+  const btnBalance = document.getElementById('btn-balance');
+  const btnFriends = document.getElementById('btn-friends');
+  const btnAbout = document.getElementById('btn-about');
+  const aboutButtonsDiv = document.getElementById('about-buttons');
+  const bonusResultDiv = document.getElementById('bonus
