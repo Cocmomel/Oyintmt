@@ -1,139 +1,132 @@
-<!DOCTYPE html><html lang="uz">
+<!DOCTYPE html>
+<html lang="uz">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Mini Ilova - 21 Ochko & Referral</title>
-<style>
-  body, html {
-    margin: 0; padding: 0; height: 100%; font-family: Arial, sans-serif; background: #f0f2f5;
-    display: flex; flex-direction: column; overflow: hidden;
-  }
-  /* Asosiy ilova */
-  #app {
-    flex: 1; display: flex; flex-direction: column; height: 100vh;
-  }
-  /* Kontent */
-  #content {
-    flex: 1; overflow-y: auto; padding: 15px 20px 120px 20px; position: relative;
-  }
-  /* Pastki menyu */
-  #menu {
-    height: 60px; background: #007bff; display: flex; justify-content: space-around; align-items: center;
-    color: white; font-weight: bold; position: fixed; bottom: 0; width: 100%; box-shadow: 0 -2px 8px rgba(0,0,0,0.2);
-    z-index: 50;
-  }
-  #menu button {
-    background: none; border: none; color: white; font-size: 14px; cursor: pointer;
-    display: flex; flex-direction: column; align-items: center;
-  }
-  #menu button:hover { color: #ffd700; }
-  #menu button.active { color: #ffd700; }
-  /* Hisobim fon rasmi */
-  #balance-section, #friends-section, #about-section, #games-section {
-    position: relative; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 0 15px rgba(0,0,0,0.1); overflow: hidden; margin-bottom: 15px;
-  }
-  .bg-img {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.18; pointer-events: none; border-radius: 12px; z-index: 0;
-  }
-  .content { position: relative; z-index: 1; color: #333; }
-  .top-buttons { display:flex; justify-content:space-between; margin-bottom:15px; }
-  #balance-section button, #friends-section button, #about-section button { padding: 10px 18px; border-radius: 7px; border:none; cursor:pointer; font-weight:bold; }
-  #withdraw-btn { background: #28a745; color: white; }
-  #deposit-btn { background: #007bff; color: white; }
-  #balance { font-size: 26px; font-weight: bold; margin-bottom: 15px; }
-  #history { max-height: 220px; overflow-y: auto; background: #fefefe; border-radius: 7px; box-shadow: 0 0 8px #ddd; padding: 10px; }
-  #history table { width: 100%; border-collapse: collapse; }
-  #history th, #history td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; }
-  #history th { background: #f7f7f7; }
-  #ref-link { background: #e9ecef; padding: 12px; border-radius: 7px; user-select: all; font-size: 14px; word-break: break-word; margin-bottom: 12px; }
-  #ref-count { font-weight: bold; margin-bottom: 15px; }
-  #ref-table { max-height: 200px; overflow-y: auto; background: #fefefe; border-radius: 7px; box-shadow: 0 0 8px #ddd; padding: 10px; }
-  #ref-table table { width:100%; border-collapse: collapse; }
-  #ref-table th, #ref-table td { padding:10px; border-bottom:1px solid #eee; text-align:left; }
-  #ref-table th { background: #f7f7f7; }
-  #about-buttons { position: fixed; bottom: 80px; right: 16px; z-index: 100; display: flex; flex-direction: column; gap: 10px; }
-  #admin-chat { background: #28a745; color: white; border: none; padding: 12px 18px; border-radius: 25px; cursor: pointer; font-weight: bold; }
-  #channel-btn { background: #007bff; color: white; border: none; padding: 12px 18px; border-radius: 25px; cursor: pointer; font-weight: bold; }
-  #bonus-btn { background: gold; color: black; border: none; padding: 12px 18px; border-radius: 25px; cursor: pointer; font-weight: bold; }
-  #bonus-result { position: fixed; bottom: 150px; left: 20px; background: #fff3cd; border: 1px solid #ffeeba; padding: 10px 20px; border-radius: 10px; font-weight: bold; color: #856404; display: none; z-index: 110; }
-  /* Games */
-  .rps-area { display:flex; flex-direction:column; gap:12px; align-items:center; }
-  .rps-buttons { display:flex; gap:10px; }
-  .rps-buttons button { padding:10px 18px; border-radius:8px; cursor:pointer; border:none; background:#007bff; color:white; font-weight:bold; }
-  .result-box { background:#f7f7f7; padding:12px; border-radius:8px; width:100%; text-align:center; }
-  /* Responsive */
-  @media (min-width:700px){ #content{ padding:25px 40px 120px 40px;} #menu button{ font-size:16px; } }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Web Kino Bot</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #111;
+            color: white;
+        }
+        .content {
+            padding: 20px;
+            display: none;
+        }
+        .active {
+            display: block;
+        }
+        .movie-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+        }
+        .movie-card {
+            background: #222;
+            border-radius: 10px;
+            overflow: hidden;
+            text-align: center;
+            cursor: pointer;
+            padding-bottom: 10px;
+        }
+        .movie-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            background: #222;
+            border-top: 1px solid #333;
+        }
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+        }
+        .nav-item.active {
+            background: #444;
+        }
+    </style>
 </head>
 <body>
-<div id="app">
-  <div id="content"></div>
-  <nav id="menu">
-    <button id="btn-games" class="active" title="O‘yинlar">🎮 O‘yinlar</button>
-    <button id="btn-balance" title="Hisobim">💰 Hisobim</button>
-    <button id="btn-friends" title="Dostlarim">👥 Dostlarim</button>
-    <button id="btn-about" title="Biz haqimizda">ℹ️ Biz haqimizda</button>
-  </nav>
-  <div id="bonus-result"></div>
-  <div id="about-buttons" style="display:none;">
-    <button id="admin-chat">Adminga yozish</button>
-    <button id="channel-btn">📢 Kanalimiz 👈</button>
-    <button id="bonus-btn">⭐ Bonus olish</button>
-  </div>
-</div>
-<script>
-// ======= Init & persistence =======
-const STORAGE_KEY = 'mini_ilova_v1';
-let state = {
-  userId: 'user_' + Math.random().toString(36).slice(2,8),
-  balance: 50000,
-  history: [],
-  refCount: 3,
-  refUsers: [ {id:'friend1', date:'2025-08-01'}, {id:'friend2', date:'2025-08-03'}, {id:'friend3', date:'2025-08-05'} ],
-  lastBonusTime: 0
-};
-// load
-function loadState(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw){ Object.assign(state, JSON.parse(raw)); }
-  }catch(e){ console.warn('Load failed', e); }
-}
-function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-loadState();
-// add default history if empty
-if(state.history.length===0){ state.history = [ {date: '2025-08-07', action:'Yutuq', amount:+3500, game:'21 Ochko'}, {date:'2025-08-08', action:'Tikish', amount:-1000, game:'Matematika'}, {date:'2025-08-09', action:'Yutuq', amount:+2500, game:'21 Ochko'} ]; saveState(); }// referral link const refLink = https://t.me/YourBot?start=${state.userId};
 
-// ======= Renderers ======= const content = document.getElementById('content'); function setActiveButton(id){ document.querySelectorAll('#menu button').forEach(b=>b.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+    <!-- Kinolar -->
+    <div id="kinolar" class="content active">
+        <h2>🎬 Kinolar</h2>
+        <div class="movie-grid" id="kinoList"></div>
+    </div>
 
-function renderGames(){ setActiveButton('btn-games'); content.innerHTML = <div id="games-section"> <img class="bg-img" src="https://images.unsplash.com/photo-1526403224743-9b4b5d9d9f4b?auto=format&fit=crop&w=1200&q=60" alt="games-bg" /> <div class="content"> <h2 style="text-align:center;">Tosh - Qaychi - Qog'oz</h2> <p style="text-align:center; color:#666;">O'yin: kompyuterga qarshi — betdan yutish uchun 3 ta variant bor.</p> <div class="rps-area"> <div class="rps-buttons"> <button data-move="tosh">🪨 Tosh</button> <button data-move="qaychi">✂️ Qaychi</button> <button data-move="qogoz">🧾 Qog'oz</button> </div> <div class="result-box" id="rps-result">Tanlang va o'ynang!</div> </div> </div> </div>; // bind document.querySelectorAll('.rps-buttons button').forEach(btn=>{ btn.addEventListener('click', ()=>{ const me = btn.getAttribute('data-move'); playRPS(me); }); }); }
+    <!-- Multfilmlar -->
+    <div id="multfilmlar" class="content">
+        <h2>🎞 Multfilmlar</h2>
+        <div class="movie-grid" id="multList"></div>
+    </div>
 
-function renderBalance(){ setActiveButton('btn-balance'); const rows = state.history.map(it=><tr><td>${it.date}</td><td>${it.action}</td><td>${(it.amount>0?'+':'')+it.amount} so'm</td><td>${it.game||''}</td></tr>).join(''); content.innerHTML = <div id="balance-section"> <img class="bg-img" src="https://images.unsplash.com/photo-1492724441997-5dc865305da7?auto=format&fit=crop&w=1000&q=60" alt="balance-bg" /> <div class="content"> <div class="top-buttons"> <button id="withdraw-btn">Pul yechish</button> <button id="deposit-btn">Hisob to'ldirish</button> </div> <div id="balance">Balans: ${state.balance} so'm</div> <div id="history"> <table> <thead><tr><th>Sana</th><th>Harakat</th><th>Summa</th><th>O'yin</th></tr></thead> <tbody>${rows}</tbody> </table> </div> </div> </div>; document.getElementById('withdraw-btn').addEventListener('click', ()=>{ const sum = parseInt(prompt('Necha so'm yechmoqchisiz?','1000'),10); if(!sum||sum<=0) return alert('To'g'ri summa kiriting'); if(sum>state.balance) return alert('Balansda yetarli mablag' yo'q'); state.balance -= sum; state.history.unshift({ date: new Date().toISOString().slice(0,10), action:'Pul yechish', amount:-sum, game:''}); saveState(); renderBalance(); alert('Pul yechildi. (Simulyatsiya)'); }); document.getElementById('deposit-btn').addEventListener('click', ()=>{ const sum = parseInt(prompt('Necha so'm qo'shmoqchisiz?','1000'),10); if(!sum||sum<=0) return alert('To'g'ri summa kiriting'); state.balance += sum; state.history.unshift({ date: new Date().toISOString().slice(0,10), action:'Hisob to'ldirish', amount:+sum, game:''}); saveState(); renderBalance(); alert('Hisob to'ldirildi. (Simulyatsiya)'); }); }
+    <!-- Biz haqimizda -->
+    <div id="about" class="content">
+        <h2>ℹ Biz haqimizda</h2>
+        <p>Bu mini web ilova orqali siz kinolar va multfilmlarni ko‘rishingiz mumkin.</p>
+    </div>
 
-function renderFriends(){ setActiveButton('btn-friends'); const refRows = state.refUsers.map(u=><tr><td>${u.id}</td><td>${u.date}</td></tr>).join(''); content.innerHTML = <div id="friends-section"> <img class="bg-img" src="https://images.unsplash.com/photo-1504384308090-c894fdcc9f6d?auto=format&fit=crop&w=1000&q=60" alt="friends" /> <div class="content"> <div id="ref-link">${refLink}</div> <button id="copy-ref">Manzilni nusxa olish</button> <div id="ref-count">Qo'shilganlar soni: ${state.refCount}</div> <div id="ref-table"> <table> <thead><tr><th>ID</th><th>Sana</th></tr></thead> <tbody>${refRows}</tbody> </table> </div> </div> </div>; document.getElementById('copy-ref').addEventListener('click', ()=>{ navigator.clipboard.writeText(refLink).then(()=>{ alert('Referral manzili nusxalandi!'); }).catch(()=>{ prompt('Manzilni qo'lda nusxa oling:', refLink); }); }); }
+    <!-- Pastki menyu -->
+    <div class="bottom-nav">
+        <div class="nav-item active" data-target="kinolar">Kinolar</div>
+        <div class="nav-item" data-target="multfilmlar">Multfilmlar</div>
+        <div class="nav-item" data-target="about">Biz haqimizda</div>
+    </div>
 
-function renderAbout(){ setActiveButton('btn-about'); content.innerHTML = <div id="about-section"> <img class="bg-img" src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=60" alt="about-bg" /> <div class="content"> <h2>Biz haqimizda</h2> <p>Bu sahifa demo maqsadida ishlab chiqildi — mini ilova interfeysi va ba'zi ishlovchi funksiyalar bilan (hisob, referral, o'yinlar va bonus).</p> <p>Agar haqiqiy bot yoki kanal qo'shmoqchi bo'lsangiz, <a id="channel-link" href="#">kanal havolasi</a> va <a id="admin-link" href="#">adminga yozish</a> tugmalari orqali ishlov beriladi.</p> </div> </div>; document.getElementById('about-buttons').style.display = 'flex'; }
+    <script>
+        // Test ma'lumotlar
+        const kinolar = [
+            { kod: "123", nom: "Uzuklar Hukmdori", rasm: "https://upload.wikimedia.org/wikipedia/en/8/87/Ringstrilogyposter.jpg" },
+            { kod: "124", nom: "Titanik", rasm: "https://upload.wikimedia.org/wikipedia/en/2/22/Titanic_poster.jpg" }
+        ];
+        const multfilmlar = [
+            { kod: "200", nom: "Shrek", rasm: "https://upload.wikimedia.org/wikipedia/en/3/39/Shrek.jpg" },
+            { kod: "201", nom: "Frozen", rasm: "https://upload.wikimedia.org/wikipedia/en/0/05/Frozen_%282013_film%29_poster.jpg" }
+        ];
 
-// ======= Small game logic ======= function playRPS(me){ const options = ['tosh','qaychi','qogoz']; const comp = options[Math.floor(Math.random()*3)]; let outcome = 'Durrang'; // rules: tosh>qaychi, qaychi>qogoz, qogoz>tosh if(me===comp) outcome='Durrang'; else if((me==='tosh'&&comp==='qaychi') || (me==='qaychi'&&comp==='qogoz') || (me==='qogoz'&&comp==='tosh')) outcome='Siz yutdingiz'; else outcome='Kompyuter yutdi'; // award money on win/lose let delta = 0; let gameName = "Tosh-Qaychi-Qog'oz"; if(outcome==='Siz yutdingiz'){ delta = 500; state.balance += delta; state.history.unshift({date:new Date().toISOString().slice(0,10), action:'Yutuq', amount:+delta, game:gameName}); } else if(outcome==='Kompyuter yutdi'){ delta = -200; state.balance += delta; state.history.unshift({date:new Date().toISOString().slice(0,10), action:'Yutqazish', amount:delta, game:gameName}); } saveState(); const resBox = document.getElementById('rps-result'); resBox.innerHTML = Siz: <b>${me}</b> — Kompyuter: <b>${comp}</b><br><span style="font-size:18px; margin-top:8px; display:block;">${outcome}</span><div style="margin-top:8px; color:#333;">Balans: ${state.balance} so'm (${delta>0?'+':''}${delta})</div>; }
+        // Render qilish funksiyasi
+        function renderMovies(list, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = "";
+            list.forEach(movie => {
+                const card = document.createElement("div");
+                card.className = "movie-card";
+                card.innerHTML = `<img src="${movie.rasm}"><p>${movie.nom}</p>`;
+                card.onclick = () => {
+                    // Bosilganda botga kino kodini yuborish
+                    if (window.Telegram && Telegram.WebApp) {
+                        Telegram.WebApp.sendData(movie.kod);
+                    } else {
+                        alert("Kino kodi: " + movie.kod);
+                    }
+                };
+                container.appendChild(card);
+            });
+        }
 
-// ======= Bonus ======= const BONUS_COOLDOWN = 1000 * 60 * 60 * 6; // 6 soat function tryBonus(){ const now = Date.now(); if(now - state.lastBonusTime < BONUS_COOLDOWN){ const left = BONUS_COOLDOWN - (now - state.lastBonusTime); const h = Math.floor(left/3600000); const m = Math.floor((left%3600000)/60000); showBonusResult(Bonus keyingi: ${h} soat ${m} minutdan keyin olinadi); return; } // random bonus const amount = [1000,2000,5000,0][Math.floor(Math.random()*4)]; state.lastBonusTime = now; if(amount>0){ state.balance += amount; state.history.unshift({date:new Date().toISOString().slice(0,10), action:'Bonus', amount:+amount, game:'Bonus'}); showBonusResult(Tabrik! Siz ${amount} so'm bonus oldingiz.); } else { state.history.unshift({date:new Date().toISOString().slice(0,10), action:'Bonus (0)', amount:0, game:'Bonus'}); showBonusResult('Afsus, bonus yo'q. Keyinga urinib ko'ring.'); } saveState(); } function showBonusResult(text){ const el = document.getElementById('bonus-result'); el.innerText = text; el.style.display = 'block'; setTimeout(()=>{ el.style.display = 'none'; }, 5000); }
+        renderMovies(kinolar, "kinoList");
+        renderMovies(multfilmlar, "multList");
 
-// ======= Menu hooks ======= document.getElementById('btn-games').addEventListener('click', renderGames); document.getElementById('btn-balance').addEventListener('click', renderBalance); document.getElementById('btn-friends').addEventListener('click', renderFriends); document.getElementById('btn-about').addEventListener('click', renderAbout);
-
-// about buttons document.getElementById('admin-chat').addEventListener('click', ()=>{ window.open('https://t.me/YourAdmin','_blank'); }); document.getElementById('channel-btn').addEventListener('click', ()=>{ window.open('https://t.me/YourChannel','_blank'); }); document.getElementById('bonus-btn').addEventListener('click', tryBonus);
-
-// initial render renderGames();
-
-// ======= Helpful: quick deploy README comment (in HTML) ======= /* DEPLOY NOTES:
-
-Save this file as index.html in the root of your GitHub repository (or in /docs if you prefer).
-
-In GitHub repo: Settings -> Pages -> Source: choose main (or gh-pages) branch and / (root) or /docs.
-
-Commit and push. Pages will publish the index.html automatically.
-
-If you still receive 404, ensure the repository is public or your Pages branch is configured correctly. */ </script>
-
+        // Menyu bosilganda sahifa almashtirish
+        document.querySelectorAll(".nav-item").forEach(item => {
+            item.addEventListener("click", () => {
+                document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
+                item.classList.add("active");
+                document.querySelectorAll(".content").forEach(c => c.classList.remove("active"));
+                document.getElementById(item.getAttribute("data-target")).classList.add("active");
+            });
+        });
+    </script>
 
 </body>
 </html>
