@@ -1,132 +1,169 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mini Web Kino Bot</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #111;
-            color: white;
-        }
-        .content {
-            padding: 20px;
-            display: none;
-        }
-        .active {
-            display: block;
-        }
-        .movie-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 10px;
-        }
-        .movie-card {
-            background: #222;
-            border-radius: 10px;
-            overflow: hidden;
-            text-align: center;
-            cursor: pointer;
-            padding-bottom: 10px;
-        }
-        .movie-card img {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-        }
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            display: flex;
-            background: #222;
-            border-top: 1px solid #333;
-        }
-        .nav-item {
-            flex: 1;
-            text-align: center;
-            padding: 10px;
-            cursor: pointer;
-        }
-        .nav-item.active {
-            background: #444;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Miniapp O‘yinlar</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f2f2f2;
+    }
+    .balance {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #222;
+      color: #fff;
+      padding: 8px 15px;
+      border-radius: 10px;
+      font-weight: bold;
+    }
+    .menu {
+      margin-top: 80px;
+    }
+    button {
+      display: block;
+      margin: 15px auto;
+      padding: 15px 30px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background: #4caf50;
+      color: white;
+    }
+    .game {
+      display: none;
+      margin-top: 40px;
+    }
+    input {
+      padding: 10px;
+      font-size: 16px;
+      width: 200px;
+    }
+  </style>
 </head>
 <body>
+  <div class="balance">💰 Balans: <span id="balance">100000</span> so‘m</div>
 
-    <!-- Kinolar -->
-    <div id="kinolar" class="content active">
-        <h2>🎬 Kinolar</h2>
-        <div class="movie-grid" id="kinoList"></div>
-    </div>
+  <div class="menu">
+    <button onclick="openGame('rps')">🎮 Tosh–Qaychi–Qog‘oz</button>
+    <button onclick="openGame('cards')">🃏 Karta O‘yini</button>
+    <button onclick="openGame('slot')">🎰 Mevalar (Slot)</button>
+  </div>
 
-    <!-- Multfilmlar -->
-    <div id="multfilmlar" class="content">
-        <h2>🎞 Multfilmlar</h2>
-        <div class="movie-grid" id="multList"></div>
-    </div>
+  <!-- RPS o'yini -->
+  <div id="rps" class="game">
+    <h2>Tosh – Qaychi – Qog‘oz</h2>
+    <input type="number" id="betRps" placeholder="Garov (500–1000000)">
+    <br><br>
+    <button onclick="playRps('Tosh')">Tosh</button>
+    <button onclick="playRps('Qaychi')">Qaychi</button>
+    <button onclick="playRps('Qog‘oz')">Qog‘oz</button>
+    <p id="rpsResult"></p>
+  </div>
 
-    <!-- Biz haqimizda -->
-    <div id="about" class="content">
-        <h2>ℹ Biz haqimizda</h2>
-        <p>Bu mini web ilova orqali siz kinolar va multfilmlarni ko‘rishingiz mumkin.</p>
-    </div>
+  <!-- Karta o'yini -->
+  <div id="cards" class="game">
+    <h2>Karta O‘yini</h2>
+    <input type="number" id="betCards" placeholder="Garov (500–1000000)">
+    <br><br>
+    <button onclick="playCards('Qizil')">Qizil</button>
+    <button onclick="playCards('Qora')">Qora</button>
+    <button onclick="playCards('Chilliq')">Chilliq</button>
+    <button onclick="playCards('G‘isht')">G‘isht</button>
+    <button onclick="playCards('Tappon')">Tappon</button>
+    <p id="cardsResult"></p>
+  </div>
 
-    <!-- Pastki menyu -->
-    <div class="bottom-nav">
-        <div class="nav-item active" data-target="kinolar">Kinolar</div>
-        <div class="nav-item" data-target="multfilmlar">Multfilmlar</div>
-        <div class="nav-item" data-target="about">Biz haqimizda</div>
-    </div>
+  <!-- Slot o'yini -->
+  <div id="slot" class="game">
+    <h2>🎰 Mevalar (Slot)</h2>
+    <input type="number" id="betSlot" placeholder="Garov (500–1000000)">
+    <br><br>
+    <button onclick="playSlot()">Garov qo‘yish</button>
+    <p id="slotResult"></p>
+  </div>
 
-    <script>
-        // Test ma'lumotlar
-        const kinolar = [
-            { kod: "123", nom: "Uzuklar Hukmdori", rasm: "https://upload.wikimedia.org/wikipedia/en/8/87/Ringstrilogyposter.jpg" },
-            { kod: "124", nom: "Titanik", rasm: "https://upload.wikimedia.org/wikipedia/en/2/22/Titanic_poster.jpg" }
-        ];
-        const multfilmlar = [
-            { kod: "200", nom: "Shrek", rasm: "https://upload.wikimedia.org/wikipedia/en/3/39/Shrek.jpg" },
-            { kod: "201", nom: "Frozen", rasm: "https://upload.wikimedia.org/wikipedia/en/0/05/Frozen_%282013_film%29_poster.jpg" }
-        ];
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand(); // Telegram ichida to‘liq ekran
+    let balance = 100000; // default balans
 
-        // Render qilish funksiyasi
-        function renderMovies(list, containerId) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = "";
-            list.forEach(movie => {
-                const card = document.createElement("div");
-                card.className = "movie-card";
-                card.innerHTML = `<img src="${movie.rasm}"><p>${movie.nom}</p>`;
-                card.onclick = () => {
-                    // Bosilganda botga kino kodini yuborish
-                    if (window.Telegram && Telegram.WebApp) {
-                        Telegram.WebApp.sendData(movie.kod);
-                    } else {
-                        alert("Kino kodi: " + movie.kod);
-                    }
-                };
-                container.appendChild(card);
-            });
-        }
+    // Agar kelajakda botdan foydalanuvchi balansini olsak:
+    // balance = tg.initDataUnsafe?.userBalance || 100000;
 
-        renderMovies(kinolar, "kinoList");
-        renderMovies(multfilmlar, "multList");
+    function updateBalance() {
+      document.getElementById('balance').innerText = balance;
+    }
 
-        // Menyu bosilganda sahifa almashtirish
-        document.querySelectorAll(".nav-item").forEach(item => {
-            item.addEventListener("click", () => {
-                document.querySelectorAll(".nav-item").forEach(i => i.classList.remove("active"));
-                item.classList.add("active");
-                document.querySelectorAll(".content").forEach(c => c.classList.remove("active"));
-                document.getElementById(item.getAttribute("data-target")).classList.add("active");
-            });
-        });
-    </script>
+    function openGame(id) {
+      document.querySelectorAll('.game').forEach(g => g.style.display = 'none');
+      document.getElementById(id).style.display = 'block';
+    }
 
+    // --- RPS ---
+    function playRps(choice) {
+      let bet = parseInt(document.getElementById('betRps').value);
+      if (!bet || bet < 500 || bet > 1000000 || bet > balance) return alert("Noto‘g‘ri garov!");
+      let options = ["Tosh","Qaychi","Qog‘oz"];
+      let bot = options[Math.floor(Math.random()*3)];
+      let result = "";
+      if (choice===bot) result="Durrang, pul qaytarildi.";
+      else if (
+        (choice==="Tosh" && bot==="Qaychi") ||
+        (choice==="Qaychi" && bot==="Qog‘oz") ||
+        (choice==="Qog‘oz" && bot==="Tosh")
+      ) { balance+=bet; result="Siz yutdingiz! +" + bet; }
+      else { balance-=bet; result="Yutqazdingiz! -" + bet; }
+      updateBalance();
+      document.getElementById('rpsResult').innerText=`Siz: ${choice}, Bot: ${bot} → ${result}`;
+    }
+
+    // --- Cards ---
+    function playCards(choice) {
+      let bet = parseInt(document.getElementById('betCards').value);
+      if (!bet || bet < 500 || bet > 1000000 || bet > balance) return alert("Noto‘g‘ri garov!");
+      let options = ["Qizil","Qora","Chilliq","G‘isht","Tappon"];
+      let card = options[Math.floor(Math.random()*5)];
+      let result="";
+      if (choice===card) {
+        let mult = (choice==="Qizil"||choice==="Qora") ? 2 : 4;
+        balance += bet*mult;
+        result=`Siz yutdingiz! ${mult}x → +${bet*mult}`;
+      } else {
+        balance -= bet;
+        result=`Yutqazdingiz! -${bet}`;
+      }
+      updateBalance();
+      document.getElementById('cardsResult').innerText=`Siz: ${choice}, Chiqqan: ${card} → ${result}`;
+    }
+
+    // --- Slot ---
+    function playSlot() {
+      let bet = parseInt(document.getElementById('betSlot').value);
+      if (!bet || bet < 500 || bet > 1000000 || bet > balance) return alert("Noto‘g‘ri garov!");
+      let symbols = ["🍒","🍋","🍊","🍉","7"];
+      let spin = [symbols[Math.floor(Math.random()*5)],
+                  symbols[Math.floor(Math.random()*5)],
+                  symbols[Math.floor(Math.random()*5)]];
+      let res = spin.join(" ");
+      let mult = 0;
+
+      if (spin[0]==="7" && spin[1]==="7" && spin[2]==="7") mult=100;
+      else if (spin[0]==spin[1] && spin[1]===spin[2]) mult=10;
+      else mult = Math.random()<0.5 ? 0 : 2;
+
+      if (mult>0) balance += bet*mult;
+      else balance -= bet;
+
+      document.getElementById('slotResult').innerText=`${res} → ${mult>0 ? `Siz yutdingiz! ${mult}x = +${bet*mult}` : `Yutqazdingiz! -${bet}`}`;
+      updateBalance();
+    }
+
+    updateBalance();
+  </script>
 </body>
 </html>
